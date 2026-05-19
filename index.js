@@ -25,7 +25,6 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         await client.connect();
-
         const db = client.db("ideavault")
         const ideaCollection = db.collection("ideas")
         const commentCollection = db.collection("comments");
@@ -39,7 +38,6 @@ async function run() {
         app.post('/ideas', async (req, res) => {
             const ideaData = req.body
             const result = await ideaCollection.insertOne(ideaData)
-
             res.json(result)
         })
 
@@ -48,37 +46,37 @@ async function run() {
             const result = await ideaCollection.findOne({ _id: new ObjectId(id) })
             res.json(result)
 
-        })
+        });
 
 
-        
+
         app.get("/my-ideas/:email", async (req, res) => {
             const email = req.params.email;
             const result = await ideaCollection.find({ userEmail: email, }).toArray();
             res.json(result);
-        }
-        );
+        });
 
         app.delete("/ideas/:id", async (req, res) => {
             const { id } = req.params;
-            const result = await ideaCollection.deleteOne({
-                _id: new ObjectId(id),
-            });
+            const result = await ideaCollection.deleteOne({ _id: new ObjectId(id) });
             res.json(result);
-        }
-        );
+        });
 
         app.patch("/ideas/:id", async (req, res) => {
             const { id } = req.params;
             const updatedIdea = req.body;
-            const result = await ideaCollection.updateOne(
-                {
-                    _id: new ObjectId(id),
-                },
+            const result = await ideaCollection.updateOne({ _id: new ObjectId(id) },
                 {
                     $set: updatedIdea,
                 }
             );
+            res.json(result);
+        });
+
+
+        app.get("/my-interactions/:email", async (req, res) => {
+            const email = req.params.email;
+            const result = await commentCollection.find({ userEmail: email }).sort({ createdAt: -1, }).toArray();
             res.json(result);
         }
         );
@@ -97,14 +95,14 @@ async function run() {
 
         app.delete("/comments/:id", async (req, res) => {
             const { id } = req.params;
-            const result = await commentCollection.deleteOne({ _id: new ObjectId(id), });
+            const result = await commentCollection.deleteOne({ _id: new ObjectId(id) });
             res.json(result);
         });
 
         app.patch("/comments/:id", async (req, res) => {
             const { id } = req.params;
             const { comment } = req.body;
-            const result = await commentCollection.updateOne({ _id: new ObjectId(id), },
+            const result = await commentCollection.updateOne({ _id: new ObjectId(id) },
                 {
                     $set: {
                         comment,
