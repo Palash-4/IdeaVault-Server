@@ -28,9 +28,7 @@ async function run() {
 
         const db = client.db("ideavault")
         const ideaCollection = db.collection("ideas")
-
-        const commentCollection =
-            db.collection("comments");
+        const commentCollection = db.collection("comments");
 
         app.get('/ideas', async (req, res) => {
             const result = await ideaCollection.find().toArray()
@@ -52,59 +50,71 @@ async function run() {
 
         })
 
+
+        
+        app.get("/my-ideas/:email", async (req, res) => {
+            const email = req.params.email;
+            const result = await ideaCollection.find({ userEmail: email, }).toArray();
+            res.json(result);
+        }
+        );
+
+        app.delete("/ideas/:id", async (req, res) => {
+            const { id } = req.params;
+            const result = await ideaCollection.deleteOne({
+                _id: new ObjectId(id),
+            });
+            res.json(result);
+        }
+        );
+
+        app.patch("/ideas/:id", async (req, res) => {
+            const { id } = req.params;
+            const updatedIdea = req.body;
+            const result = await ideaCollection.updateOne(
+                {
+                    _id: new ObjectId(id),
+                },
+                {
+                    $set: updatedIdea,
+                }
+            );
+            res.json(result);
+        }
+        );
+
         app.post("/comments", async (req, res) => {
             const commentData = req.body;
-            const result =
-                await commentCollection.insertOne(
-                    commentData
-                );
-
+            const result = await commentCollection.insertOne(commentData);
             res.json(result);
         });
 
         app.get("/comments/:ideaId", async (req, res) => {
-
             const { ideaId } = req.params;
-            const result =
-                await commentCollection
-                    .find({ ideaId })
-                    .toArray();
-
+            const result = await commentCollection.find({ ideaId }).toArray();
             res.json(result);
         });
 
         app.delete("/comments/:id", async (req, res) => {
-
             const { id } = req.params;
-
-            const result =
-                await commentCollection.deleteOne({
-                    _id: new ObjectId(id),
-                });
-
+            const result = await commentCollection.deleteOne({ _id: new ObjectId(id), });
             res.json(result);
         });
 
         app.patch("/comments/:id", async (req, res) => {
-
             const { id } = req.params;
-
             const { comment } = req.body;
-
-            const result =
-                await commentCollection.updateOne(
-                    {
-                        _id: new ObjectId(id),
+            const result = await commentCollection.updateOne({ _id: new ObjectId(id), },
+                {
+                    $set: {
+                        comment,
                     },
-                    {
-                        $set: {
-                            comment,
-                        },
-                    }
-                );
-
+                }
+            );
             res.json(result);
         });
+
+
 
 
         await client.db("admin").command({ ping: 1 });
