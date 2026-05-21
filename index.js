@@ -83,22 +83,41 @@ async function run() {
             res.json(result);
         });
 
-        app.delete("/ideas/:id", verifyToken, async (req, res) => {
+        app.delete("/comments/:id", verifyToken, async (req, res) => {
             const { id } = req.params;
-            const result = await ideaCollection.deleteOne({ _id: new ObjectId(id) });
-            res.json(result);
-        });
+            const existingComment = await commentCollection.findOne({ _id: new ObjectId(id) });
+            if (
+                existingComment.userEmail !== req.user.email
+            ) {
+                return res.status(403).json({
+                    message: "Forbidden"
+                });
+            }
 
-        app.patch("/ideas/:id", verifyToken, async (req, res) => {
+            const result = await commentCollection.deleteOne({ _id: new ObjectId(id) });
+            res.json(result);
+        }
+        );
+
+        app.patch("/comments/:id", verifyToken, async (req, res) => {
             const { id } = req.params;
-            const updatedIdea = req.body;
-            const result = await ideaCollection.updateOne({ _id: new ObjectId(id) },
+            const { comment } = req.body;
+            const existingComment = await commentCollection.findOne({ _id: new ObjectId(id) });
+
+            if (
+                existingComment.userEmail !== req.user.email
+            ) {
+                return res.status(403).json({message: "Forbidden"});
+            }
+
+            const result = await commentCollection.updateOne({_id: new ObjectId(id)},
                 {
-                    $set: updatedIdea,
+                    $set: { comment },
                 }
             );
             res.json(result);
-        });
+        }
+        );
 
 
         app.get("/my-interactions/:email", verifyToken, async (req, res) => {
